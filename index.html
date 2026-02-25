@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
-  <title>アイレット キャンティーン クチコミ生成</title>
+  <title>アンケートのお願い</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <!-- Tailwind CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -25,10 +25,10 @@
     <!-- ヘッダー -->
     <header class="mb-8 text-center">
       <h1 class="text-2xl md:text-3xl font-semibold tracking-tight text-slate-900">
-        アイレット キャンティーン クチコミジェネレーター
+        アンケートのお願い
       </h1>
       <p class="mt-2 text-sm md:text-base text-slate-600">
-        星評価とおすすめタグを選んで、「アイレット キャンティーン」のレビュー文を生成します。
+        気にった点や、おすすめしたい内容を教えてください。
       </p>
     </header>
 
@@ -39,29 +39,29 @@
         <!-- 星評価 -->
         <div class="space-y-2">
           <label class="block text-sm font-medium text-slate-800">
-            星評価（★1〜5）
+            星評価（1〜5）
           </label>
-          <div class="flex items-center gap-2">
-            <div id="starRating" class="flex gap-1">
+          <div class="flex items-center gap-3">
+            <div id="starRating" class="flex gap-3">
               <button type="button" data-value="1"
-                class="star-btn w-9 h-9 flex items-center justify-center rounded-full border border-amber-200 bg-white text-amber-300 hover:bg-amber-50 transition">
-                ★
+                class="star-btn w-8 h-8 flex items-center justify-center rounded-full border border-amber-200 bg-white text-slate-700 text-sm hover:bg-amber-50 transition">
+                1
               </button>
               <button type="button" data-value="2"
-                class="star-btn w-9 h-9 flex items-center justify-center rounded-full border border-amber-200 bg-white text-amber-300 hover:bg-amber-50 transition">
-                ★★
+                class="star-btn w-8 h-8 flex items-center justify-center rounded-full border border-amber-200 bg-white text-slate-700 text-sm hover:bg-amber-50 transition">
+                2
               </button>
               <button type="button" data-value="3"
-                class="star-btn w-9 h-9 flex items-center justify-center rounded-full border border-amber-200 bg-white text-amber-300 hover:bg-amber-50 transition">
-                ★★★
+                class="star-btn w-8 h-8 flex items-center justify-center rounded-full border border-amber-200 bg-white text-slate-700 text-sm hover:bg-amber-50 transition">
+                3
               </button>
               <button type="button" data-value="4"
-                class="star-btn w-9 h-9 flex items-center justify-center rounded-full border border-amber-200 bg-white text-amber-300 hover:bg-amber-50 transition">
-                ★★★★
+                class="star-btn w-8 h-8 flex items-center justify-center rounded-full border border-amber-200 bg-white text-slate-700 text-sm hover:bg-amber-50 transition">
+                4
               </button>
               <button type="button" data-value="5"
-                class="star-btn w-9 h-9 flex items-center justify-center rounded-full border border-amber-200 bg-white text-amber-300 hover:bg-amber-50 transition">
-                ★★★★★
+                class="star-btn w-8 h-8 flex items-center justify-center rounded-full border border-amber-200 bg-white text-slate-700 text-sm hover:bg-amber-50 transition">
+                5
               </button>
             </div>
             <span id="starLabel" class="ml-2 text-sm text-slate-600">
@@ -122,10 +122,10 @@
         <div class="flex flex-col md:flex-row md:items-center gap-3 justify-between pt-2">
           <button id="generateBtn"
             class="inline-flex items-center justify-center gap-2 rounded-full bg-cafeWood text-white px-6 py-2.5 text-sm font-medium shadow-sm hover:bg-cafeWood/90 active:bg-cafeWood/80 transition">
-            クチコミを生成（Gemini）
+            クチコミを生成
           </button>
           <p class="text-[11px] text-slate-500">
-            ※ Gemini API（gemini-1.5-flash）をバックエンド経由で利用してレビュー文を生成します。
+            AIが生成しますのでしばらくお待ちください。
           </p>
         </div>
       </section>
@@ -142,7 +142,7 @@
               テキストをコピー
             </button>
             <a
-              href="https://www.google.com/maps/search/?api=1&query=%E3%82%A2%E3%82%A4%E3%83%AC%E3%83%83%E3%83%88+%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%86%E3%82%A3%E3%83%BC%E3%83%B3"
+              href="https://g.page/r/CYEhDkSV6cOyEBM/review"
               target="_blank" rel="noopener noreferrer"
               class="inline-flex items-center justify-center rounded-full border border-cafeWood/40 bg-white px-4 py-1.5 text-xs font-medium text-cafeWood hover:bg-cafeBg transition">
               Googleマップのレビューを書く
@@ -183,10 +183,10 @@
           const v = Number(b.getAttribute('data-value'));
           if (v <= Number(value)) {
             b.classList.add('bg-amber-100', 'text-amber-500');
-            b.classList.remove('bg-white', 'text-amber-300');
+            b.classList.remove('bg-white', 'text-slate-700');
           } else {
             b.classList.remove('bg-amber-100', 'text-amber-500');
-            b.classList.add('bg-white', 'text-amber-300');
+            b.classList.add('bg-white', 'text-slate-700');
           }
         });
       });
