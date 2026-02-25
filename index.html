@@ -193,13 +193,22 @@
     });
 
     // タグ選択（トグル）
-    tagButtons.forEach(btn => {
-      btn.addEventListener('click', () => {
-        btn.classList.toggle('bg-cafeWood');
-        btn.classList.toggle('text-white');
-        btn.classList.toggle('border-cafeWood');
-      });
-    });
+tagButtons.forEach(btn => {
+  btn.addEventListener('click', () => {
+    // 背景色と境界線の切り替え
+    btn.classList.toggle('bg-cafeWood');
+    btn.classList.toggle('border-cafeWood');
+
+    // 文字色の切り替え（元の slate-700 を消して white を入れる）
+    if (btn.classList.contains('bg-cafeWood')) {
+      btn.classList.remove('text-slate-700');
+      btn.classList.add('text-white');
+    } else {
+      btn.classList.remove('text-white');
+      btn.classList.add('text-slate-700');
+    }
+  });
+});
 
     // クチコミ生成（Vercel の API 経由）
     generateBtn.addEventListener('click', async () => {
