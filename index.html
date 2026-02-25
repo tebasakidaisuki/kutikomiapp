@@ -193,23 +193,19 @@
     });
 
     // タグ選択（トグル）
+// 【修正後】背景色のみを切り替え、文字色はそのままにする設定
 tagButtons.forEach(btn => {
   btn.addEventListener('click', () => {
-    // 背景色と境界線の切り替え
+    // 背景色と境界線の色だけを切り替えます
+    // 文字色（text-slate-700）は HTML 側に書かれたまま変化しません
     btn.classList.toggle('bg-cafeWood');
     btn.classList.toggle('border-cafeWood');
-
-    // 文字色の切り替え（元の slate-700 を消して white を入れる）
-    if (btn.classList.contains('bg-cafeWood')) {
-      btn.classList.remove('text-slate-700');
-      btn.classList.add('text-white');
-    } else {
-      btn.classList.remove('text-white');
-      btn.classList.add('text-slate-700');
-    }
+    
+    // 背景が濃くなった時に文字が読みにくい場合は、
+    // ここで文字を少し太くする（font-bold）などの調整も可能です
+    btn.classList.toggle('font-medium'); 
   });
 });
-
     // クチコミ生成（Vercel の API 経由）
     generateBtn.addEventListener('click', async () => {
       const star = starValueInput.value;
