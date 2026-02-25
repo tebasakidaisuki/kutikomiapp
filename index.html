@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>アイレット キャンティーン クチコミ生成</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            cafeBg: '#f8f3ea',   // ベージュ系
+            cafeCard: '#ffffff', // 白
+            cafeWood: '#c59b70', // 木目イメージ
+          },
+        },
+      },
+    };
+  </script>
+</head>
+<body class="min-h-screen bg-cafeBg text-slate-800 flex items-center justify-center px-4 py-10">
+  <div class="w-full max-w-3xl">
+    <!-- ヘッダー -->
+    <header class="mb-8 text-center">
+      <h1 class="text-2xl md:text-3xl font-semibold tracking-tight text-slate-900">
+        アイレット キャンティーン クチコミジェネレーター
+      </h1>
+      <p class="mt-2 text-sm md:text-base text-slate-600">
+        星評価とおすすめタグを選んで、「アイレット キャンティーン」のレビュー文を生成します。
+      </p>
+    </header>
+
+    <!-- メインカード -->
+    <main class="bg-cafeCard/90 backdrop-blur-sm shadow-lg rounded-2xl border border-slate-100 overflow-hidden">
+      <!-- 上部：入力フォーム -->
+      <section class="p-6 md:p-8 space-y-6 border-b border-slate-100">
+        <!-- 星評価 -->
+        <div class="space-y-2">
+          <label class="block text-sm font-medium text-slate-800">
+            星評価（★1〜5）
+          </label>
+          <div class="flex items-center gap-2">
+            <div id="starRating" class="flex gap-1">
+              <button type="button" data-value="1"
+                class="star-btn w-9 h-9 flex items-center justify-center rounded-full border border-amber-200 bg-white text-amber-300 hover:bg-amber-50 transition">
+                ★
+              </button>
+              <button type="button" data-value="2"
+                class="star-btn w-9 h-9 flex items-center justify-center rounded-full border border-amber-200 bg-white text-amber-300 hover:bg-amber-50 transition">
+                ★★
+              </button>
+              <button type="button" data-value="3"
+                class="star-btn w-9 h-9 flex items-center justify-center rounded-full border border-amber-200 bg-white text-amber-300 hover:bg-amber-50 transition">
+                ★★★
+              </button>
+              <button type="button" data-value="4"
+                class="star-btn w-9 h-9 flex items-center justify-center rounded-full border border-amber-200 bg-white text-amber-300 hover:bg-amber-50 transition">
+                ★★★★
+              </button>
+              <button type="button" data-value="5"
+                class="star-btn w-9 h-9 flex items-center justify-center rounded-full border border-amber-200 bg-white text-amber-300 hover:bg-amber-50 transition">
+                ★★★★★
+              </button>
+            </div>
+            <span id="starLabel" class="ml-2 text-sm text-slate-600">
+              未選択
+            </span>
+            <input type="hidden" id="starValue" value="" />
+          </div>
+        </div>
+
+        <!-- おすすめタグ -->
+        <div class="space-y-2">
+          <label class="block text-sm font-medium text-slate-800">
+            おすすめタグ（複数選択可）
+          </label>
+          <div id="tagContainer" class="flex flex-wrap gap-2">
+            <button type="button" data-tag="麻辣湯"
+              class="tag-btn px-3 py-1.5 rounded-full border border-slate-200 bg-white text-sm text-slate-700 hover:bg-cafeBg transition">
+              麻辣湯
+            </button>
+            <button type="button" data-tag="参鶏湯"
+              class="tag-btn px-3 py-1.5 rounded-full border border-slate-200 bg-white text-sm text-slate-700 hover:bg-cafeBg transition">
+              参鶏湯
+            </button>
+            <button type="button" data-tag="ルーローハン"
+              class="tag-btn px-3 py-1.5 rounded-full border border-slate-200 bg-white text-sm text-slate-700 hover:bg-cafeBg transition">
+              ルーローハン
+            </button>
+            <button type="button" data-tag="ダーラーピー"
+              class="tag-btn px-3 py-1.5 rounded-full border border-slate-200 bg-white text-sm text-slate-700 hover:bg-cafeBg transition">
+              ダーラーピー
+            </button>
+            <button type="button" data-tag="アジア料理"
+              class="tag-btn px-3 py-1.5 rounded-full border border-slate-200 bg-white text-sm text-slate-700 hover:bg-cafeBg transition">
+              アジア料理
+            </button>
+            <button type="button" data-tag="カフェ"
+              class="tag-btn px-3 py-1.5 rounded-full border border-slate-200 bg-white text-sm text-slate-700 hover:bg-cafeBg transition">
+              カフェ
+            </button>
+            <button type="button" data-tag="高柳"
+              class="tag-btn px-3 py-1.5 rounded-full border border-slate-200 bg-white text-sm text-slate-700 hover:bg-cafeBg transition">
+              高柳
+            </button>
+          </div>
+        </div>
+
+        <!-- 自由記述 -->
+        <div class="space-y-2">
+          <label for="freeText" class="block text-sm font-medium text-slate-800">
+            自由記述欄（おいしかったメニューなど）
+          </label>
+          <textarea id="freeText" rows="4"
+            class="w-full rounded-xl border border-slate-200 bg-white/80 px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-cafeWood focus:ring-cafeWood focus:outline-none"
+            placeholder="例）ルーローハンの香りがよく、やさしい味付けでランチにぴったりでした。スタッフさんも丁寧で居心地がよかったです。"></textarea>
+        </div>
+
+        <!-- 生成ボタン -->
+        <div class="flex flex-col md:flex-row md:items-center gap-3 justify-between pt-2">
+          <button id="generateBtn"
+            class="inline-flex items-center justify-center gap-2 rounded-full bg-cafeWood text-white px-6 py-2.5 text-sm font-medium shadow-sm hover:bg-cafeWood/90 active:bg-cafeWood/80 transition">
+            クチコミを生成（Gemini）
+          </button>
+          <p class="text-[11px] text-slate-500">
+            ※ Gemini API（gemini-1.5-flash）をバックエンド経由で利用してレビュー文を生成します。
+          </p>
+        </div>
+      </section>
+
+      <!-- 下部：生成結果とアクション -->
+      <section class="p-6 md:p-8 space-y-4 bg-gradient-to-br from-white to-cafeBg/60">
+        <div class="flex items-center justify-between gap-3">
+          <h2 class="text-sm font-semibold text-slate-800">
+            生成されたクチコミ
+          </h2>
+          <div class="flex gap-2">
+            <button id="copyBtn"
+              class="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-4 py-1.5 text-xs font-medium text-slate-700 hover:bg-cafeBg transition">
+              テキストをコピー
+            </button>
+            <a
+              href="https://www.google.com/maps/search/?api=1&query=%E3%82%A2%E3%82%A4%E3%83%AC%E3%83%83%E3%83%88+%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%86%E3%82%A3%E3%83%BC%E3%83%B3"
+              target="_blank" rel="noopener noreferrer"
+              class="inline-flex items-center justify-center rounded-full border border-cafeWood/40 bg-white px-4 py-1.5 text-xs font-medium text-cafeWood hover:bg-cafeBg transition">
+              Googleマップのレビューを書く
+            </a>
+          </div>
+        </div>
+
+        <div class="rounded-xl border border-slate-200 bg-white/80 px-4 py-3 text-sm text-slate-800 min-h-[120px] whitespace-pre-wrap"
+             id="outputArea">
+          ここに生成されたクチコミが表示されます。
+        </div>
+
+        <p id="statusMessage" class="text-[11px] text-slate-500 h-4"></p>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    // ===== UI ロジック（星評価・タグ選択・バックエンド連携） =====
+    const starButtons = document.querySelectorAll('.star-btn');
+    const starValueInput = document.getElementById('starValue');
+    const starLabel = document.getElementById('starLabel');
+    const tagButtons = document.querySelectorAll('.tag-btn');
+    const generateBtn = document.getElementById('generateBtn');
+    const copyBtn = document.getElementById('copyBtn');
+    const freeText = document.getElementById('freeText');
+    const outputArea = document.getElementById('outputArea');
+    const statusMessage = document.getElementById('statusMessage');
+
+    // 星評価クリック
+    starButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const value = btn.getAttribute('data-value');
+        starValueInput.value = value;
+        starLabel.textContent = `★${value} を選択中`;
+
+        starButtons.forEach(b => {
+          const v = Number(b.getAttribute('data-value'));
+          if (v <= Number(value)) {
+            b.classList.add('bg-amber-100', 'text-amber-500');
+            b.classList.remove('bg-white', 'text-amber-300');
+          } else {
+            b.classList.remove('bg-amber-100', 'text-amber-500');
+            b.classList.add('bg-white', 'text-amber-300');
+          }
+        });
+      });
+    });
+
+    // タグ選択（トグル）
+    tagButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        btn.classList.toggle('bg-cafeWood');
+        btn.classList.toggle('text-white');
+        btn.classList.toggle('border-cafeWood');
+      });
+    });
+
+    // クチコミ生成（Vercel の API 経由）
+    generateBtn.addEventListener('click', async () => {
+      const star = starValueInput.value;
+      const selectedTags = Array.from(tagButtons)
+        .filter(b => b.classList.contains('bg-cafeWood'))
+        .map(b => b.getAttribute('data-tag'));
+      const free = freeText.value.trim();
+
+      const originalLabel = generateBtn.textContent;
+      generateBtn.disabled = true;
+      generateBtn.classList.add('opacity-60', 'cursor-not-allowed');
+      generateBtn.textContent = '生成中…';
+      statusMessage.textContent = 'サーバ経由で Gemini にリクエストしています…';
+
+      try {
+        const response = await fetch('/api/generate-review', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            star,
+            tags: selectedTags,
+            freeText: free,
+          }),
+        });
+
+        const data = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+          const msg = data.error || 'クチコミの生成に失敗しました。時間をおいて再度お試しください。';
+          outputArea.textContent = msg;
+          statusMessage.textContent = 'バックエンド側でエラーが発生しました。';
+          return;
+        }
+
+        const generatedText = (data && data.text ? String(data.text) : '').trim();
+        if (generatedText) {
+          outputArea.textContent = generatedText;
+          statusMessage.textContent = 'Gemini からクチコミを生成しました。';
+        } else {
+          outputArea.textContent = 'クチコミの生成に失敗しました。入力内容を見直して再度お試しください。';
+          statusMessage.textContent = 'レスポンスからテキストを取得できませんでした。';
+        }
+      } catch (error) {
+        console.error(error);
+        outputArea.textContent = 'クチコミの生成中にエラーが発生しました。時間をおいて再度お試しください。';
+        statusMessage.textContent = 'ネットワークエラーが発生しました。接続環境をご確認ください。';
+      } finally {
+        generateBtn.disabled = false;
+        generateBtn.classList.remove('opacity-60', 'cursor-not-allowed');
+        generateBtn.textContent = originalLabel;
+      }
+    });
+
+    // コピー
+    copyBtn.addEventListener('click', async () => {
+      const text = outputArea.textContent.trim();
+      if (!text) {
+        statusMessage.textContent = 'コピーするテキストがありません。';
+        return;
+      }
+      try {
+        await navigator.clipboard.writeText(text);
+        statusMessage.textContent = '生成テキストをクリップボードにコピーしました。';
+      } catch (e) {
+        statusMessage.textContent = 'コピーに失敗しました。ブラウザの許可設定をご確認ください。';
+      }
+    });
+  </script>
+</body>
+</html>
