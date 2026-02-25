@@ -69,7 +69,7 @@ ${userContext}
 `.trim();
 
   try {
-    const modelId = 'gemini-1.5-flash';
+    const modelId = 'gemini-2.5-flash';
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1/models/${modelId}:generateContent?key=${encodeURIComponent(apiKey)}`,
       {
