@@ -7,60 +7,53 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        cafeWood: '#8D6E63',
-                        cafeBg: '#FDF5E6',
-                    }
-                }
-            }
+            theme: { extend: { colors: { cafeWood: '#8D6E63', cafeBg: '#FDF5E6' } } }
         }
     </script>
 </head>
 <body class="bg-cafeBg min-h-screen p-4 text-slate-800">
-    <div class="max-w-md mx-auto bg-white rounded-3xl shadow-xl overflow-hidden p-6">
-        <h1 id="shop-name" class="text-2xl font-bold text-center text-cafeWood mb-6">読み込み中...</h1>
+    <div class="max-w-md mx-auto bg-white rounded-3xl shadow-xl p-6 space-y-6">
+        <h1 id="shop-name" class="text-2xl font-bold text-center text-cafeWood">読み込み中...</h1>
 
-        <div class="flex justify-center gap-2 mb-8">
-            <template id="star-template">
-                <svg class="star w-10 h-10 cursor-pointer fill-slate-200 transition" viewBox="0 0 24 24">
-                    <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
-                </svg>
-            </template>
-            <div id="star-container" class="flex gap-2"></div>
-        </div>
-
-        <div id="input-area" class="hidden space-y-6">
+        <div class="space-y-4">
             <div>
-                <label class="block text-sm font-medium mb-2">おすすめメニュー</label>
+                <label class="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-widest">おすすめメニュー</label>
                 <div id="tag-container" class="flex flex-wrap gap-2"></div>
             </div>
-
             <div>
-                <label class="block text-sm font-medium mb-2">利用シーン</label>
+                <label class="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-widest">利用シーン</label>
                 <div id="scene-container" class="flex flex-wrap gap-2"></div>
             </div>
-
             <div>
-                <label class="block text-sm font-medium mb-2">今の気分</label>
+                <label class="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-widest">今の気分</label>
                 <div id="mood-container" class="flex flex-wrap gap-2"></div>
             </div>
-
-            <textarea id="free-text" class="w-full p-3 border rounded-xl h-24 text-sm focus:ring-2 focus:ring-cafeWood outline-none" placeholder="店主へのメッセージなど（任意）"></textarea>
-
-            <button id="generate-btn" class="w-full bg-cafeWood text-white py-4 rounded-2xl font-bold shadow-lg active:scale-95 transition">
-                クチコミを生成する
-            </button>
+            <textarea id="free-text" class="w-full p-3 border border-slate-200 rounded-xl h-20 text-sm outline-none focus:border-cafeWood" placeholder="自由な感想（任意）"></textarea>
         </div>
 
-        <div id="low-rating-message" class="hidden p-4 bg-orange-50 text-orange-700 rounded-xl text-center">
-            ご期待に沿えず申し訳ございません。<br>よろしければ改善のため詳細をお聞かせください。
+        <hr class="border-slate-100">
+
+        <div class="text-center">
+            <p class="text-sm font-medium mb-3">お店の評価を教えてください</p>
+            <div id="star-container" class="flex justify-center gap-2"></div>
         </div>
 
-        <div id="result-area" class="hidden mt-6 p-4 bg-slate-50 rounded-xl border-2 border-dashed border-slate-200">
-            <p id="generated-text" class="text-sm leading-relaxed mb-4"></p>
-            <button id="copy-btn" class="w-full border-2 border-cafeWood text-cafeWood py-2 rounded-xl font-bold">コピーする</button>
+        <button id="generate-btn" class="hidden w-full bg-cafeWood text-white py-4 rounded-2xl font-bold shadow-lg active:scale-95 transition">
+            クチコミを生成する
+        </button>
+
+        <div id="low-rating-message" class="hidden p-4 bg-orange-50 text-orange-700 rounded-xl text-center text-sm">
+            ご期待に沿えず申し訳ございません。改善に努めます。
+        </div>
+
+        <div id="result-area" class="hidden space-y-4 pt-4 border-t border-slate-100">
+            <div class="p-4 bg-slate-50 rounded-xl border-2 border-dashed border-slate-200">
+                <p id="generated-text" class="text-sm leading-relaxed text-slate-600"></p>
+            </div>
+            <button id="copy-btn" class="w-full bg-slate-800 text-white py-3 rounded-xl font-bold text-sm">文章をコピーする</button>
+            <a id="map-link" href="#" target="_blank" class="block w-full text-center py-3 rounded-xl border-2 border-cafeWood text-cafeWood font-bold text-sm hover:bg-cafeWood hover:text-white transition">
+                Googleマップに投稿する
+            </a>
         </div>
     </div>
 
@@ -68,89 +61,66 @@
         const SPREADSHEET_ID = '1XxbZIzwMt38U-2jofDb5bm8UR2g9YgWILZRclUcLBtE';
         let shopData = {};
 
-        // 1. スプレッドシートからデータを取得（CSV形式で取得するので認証不要）
         async function fetchConfig() {
             const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv`;
-            const response = await fetch(url);
-            const csvText = await response.text();
-            
-            // CSVをパース（簡易版）
-            const rows = csvText.split('\n').map(row => row.split(',').map(cell => cell.replace(/"/g, '')));
+            const res = await fetch(url);
+            const csv = await res.text();
+            // カンマ区切りを正確にパース
+            const rows = csv.split('\n').map(r => r.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g)?.map(c => c.replace(/"/g, '')) || []);
             const headers = rows[0];
-            const data = rows[1]; // 1行目のデータを使用
-
+            const data = rows[1];
             headers.forEach((h, i) => shopData[h] = data[i]);
 
             document.getElementById('shop-name').textContent = shopData.shopName;
             setupChips(shopData.tags, 'tag-container');
             setupChips(shopData.scenes, 'scene-container');
             setupChips(shopData.moods, 'mood-container');
+            document.getElementById('map-link').href = shopData.googleMapUrl || '#';
         }
 
-        function setupChips(dataString, containerId) {
+        function setupChips(str, containerId) {
             const container = document.getElementById(containerId);
-            if(!dataString) return;
-            dataString.split('/').forEach(item => {
+            if(!str) return;
+            str.split(/[,/]/).forEach(item => {
                 const btn = document.createElement('button');
-                btn.textContent = item;
-                btn.className = "px-3 py-1 rounded-full border border-slate-300 text-sm transition text-slate-700";
-                btn.onclick = () => {
-                    btn.classList.toggle('bg-cafeWood');
-                    btn.classList.toggle('border-cafeWood');
-                };
+                btn.textContent = item.trim();
+                btn.className = "px-4 py-2 rounded-xl border border-slate-200 text-sm transition bg-white text-slate-600 active:bg-cafeWood";
+                btn.onclick = () => btn.classList.toggle('bg-cafeWood'), btn.classList.toggle('text-white'), btn.classList.toggle('border-cafeWood');
                 container.appendChild(btn);
             });
         }
 
-        // 2. 星評価のロジック
-        const starContainer = document.getElementById('star-container');
-        const template = document.getElementById('star-template');
+        // 星評価
         let currentRating = 0;
-
-        for (let i = 0; i < 5; i++) {
-            const star = template.content.cloneNode(true).querySelector('svg');
+        const starContainer = document.getElementById('star-container');
+        for (let i = 1; i <= 5; i++) {
+            const star = document.createElement('span');
+            star.innerHTML = '★';
+            star.className = "text-4xl cursor-pointer text-slate-200 transition";
             star.onclick = () => {
-                currentRating = i + 1;
-                updateStars(currentRating);
-                toggleInputArea(currentRating);
+                currentRating = i;
+                document.querySelectorAll('#star-container span').forEach((s, idx) => s.style.color = idx < i ? '#FACC15' : '#E2E8F0');
+                document.getElementById('generate-btn').classList.toggle('hidden', i < 3);
+                document.getElementById('low-rating-message').classList.toggle('hidden', i >= 3);
             };
             starContainer.appendChild(star);
         }
 
-        function updateStars(rating) {
-            const allStars = document.querySelectorAll('.star');
-            allStars.forEach((s, i) => {
-                s.classList.toggle('fill-yellow-400', i < rating);
-                s.classList.toggle('fill-slate-200', i >= rating);
-            });
-        }
-
-        function toggleInputArea(rating) {
-            const inputArea = document.getElementById('input-area');
-            const lowMsg = document.getElementById('low-rating-message');
-            if (rating >= 3) {
-                inputArea.classList.remove('hidden');
-                lowMsg.classList.add('hidden');
-            } else {
-                inputArea.classList.add('hidden');
-                lowMsg.classList.remove('hidden');
-            }
-        }
-
-        // 3. 生成ロジック
         document.getElementById('generate-btn').onclick = async () => {
-            const selectedTags = Array.from(document.querySelectorAll('#tag-container .bg-cafeWood')).map(b => b.textContent);
-            const selectedScenes = Array.from(document.querySelectorAll('#scene-container .bg-cafeWood')).map(b => b.textContent);
-            const selectedMoods = Array.from(document.querySelectorAll('#mood-container .bg-cafeWood')).map(b => b.textContent);
+            const btn = document.getElementById('generate-btn');
+            btn.textContent = "生成中...";
+            btn.disabled = true;
 
+            const selected = id => Array.from(document.querySelectorAll(`#${id} .bg-cafeWood`)).map(b => b.textContent).join('、');
+            
             const res = await fetch('/api/generate-review', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     star: currentRating,
-                    tags: selectedTags,
-                    scene: selectedScenes.join(','),
-                    mood: selectedMoods.join(','),
+                    tags: selected('tag-container').split('、'),
+                    scene: selected('scene-container'),
+                    mood: selected('mood-container'),
                     freeText: document.getElementById('free-text').value,
                     shopName: shopData.shopName,
                     features: shopData.features,
@@ -162,6 +132,13 @@
             const result = await res.json();
             document.getElementById('generated-text').textContent = result.text;
             document.getElementById('result-area').classList.remove('hidden');
+            btn.textContent = "クチコミを生成する";
+            btn.disabled = false;
+        };
+
+        document.getElementById('copy-btn').onclick = () => {
+            navigator.clipboard.writeText(document.getElementById('generated-text').textContent);
+            alert('コピーしました！');
         };
 
         fetchConfig();
