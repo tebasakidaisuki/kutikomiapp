@@ -1,127 +1,57 @@
-export const config = {
-  runtime: 'edge', // Edge Function（Request/Response ベース）
-};
-
-export default async function handler(req) {
+export default async function handler(req, res) {
   if (req.method !== 'POST') {
-    return new Response(
-      JSON.stringify({ error: 'Method Not Allowed' }),
-      {
-        status: 405,
-        headers: { 'Content-Type': 'application/json' },
-      }
-    );
+    return res.status(405).json({ message: 'Method not allowed' });
   }
 
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) {
-    return new Response(
-      JSON.stringify({ error: 'GEMINI_API_KEY が設定されていません。Vercel の環境変数に追加してください。' }),
-      {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' },
-      }
-    );
-  }
+  const { 
+    star, 
+    tags, 
+    scene, 
+    mood, 
+    freeText, 
+    shopName, 
+    features, 
+    atmosphere, 
+    targetAudience 
+  } = req.body;
 
-  let body;
-  try {
-    body = await req.json();
-  } catch {
-    return new Response(
-      JSON.stringify({ error: 'リクエストボディの解析に失敗しました。' }),
-      { status: 400, headers: { 'Content-Type': 'application/json' } }
-    );
-  }
-
-  const star = body.star || '';
-  const tags = Array.isArray(body.tags) ? body.tags : [];
-  const freeText = body.freeText || '';
-
-  const systemInstruction = `
-あなたは「アイレット キャンティーン」のクチコミを執筆する専門ライターです。
-必ずレビュー文の中で、
-- 「金沢市高柳」にあるお店であること
-- 「アジア料理」であること
-- 「本格的な味」であること
-といったニュアンスを、自然な日本語で含めてください。
-過剰な誇張や事実と異なる表現は避け、実際に訪れたお客さまの声のように書いてください。
-`.trim();
-
-  const userContext = `
-星評価: ${star || '未入力'}
-選択されたタグ: ${tags.length ? tags.join('、') : '未選択'}
-メモ（自由記述）: ${freeText || '特になし'}
-`.trim();
-
+  // AIへの指示文（プロンプト）
   const prompt = `
-[システム指示]
-${systemInstruction}
+あなたは「${shopName}」の魅力を伝える、型にはまらないプロの短文ライターです。
+以下のデータをもとに、生成するたびに異なる視点で、**200文字以内**の新鮮なクチコミを1つ作成してください。
 
-[ユーザーからの情報]
-${userContext}
+【店舗データ】
+- 店名: ${shopName}
+- こだわり: ${features}
+- 雰囲気: ${atmosphere}
+- ターゲット層: ${targetAudience}
 
-[出力フォーマットの条件]
-- 日本語で、自然な一人称のクチコミとして書いてください。
-- 店名「アイレット キャンティーン」を1回以上含めてください。
-- 星評価が高いほどポジティブなトーン、低いほど改善点にも触れるトーンにしてください。
-- 絵文字は使わず、丁寧で読みやすい文体にしてください。
-`.trim();
+【ユーザー入力】
+- 満足度: 星${star}個
+- 選んだメニュー: ${tags.join('、')}
+- 利用シーン: ${scene}
+- 今の気分: ${mood}
+- 感想メモ: ${freeText || "特になし"}
+
+【執筆ルール（ランダム性と簡潔さの徹底）】
+1. **書き出しをランダムに**: 毎回、以下のいずれかのパターンを直感で選んで書き始めてください。
+   - パターンA：特定のメニュー（${tags[0]}等）の具体的な味や感動から。
+   - パターンB：その日の${mood}や、${atmosphere}を感じるお店の第一印象から。
+   - パターンC：${scene}というシチュエーションに、この店がどう寄り添ってくれたか。
+2. **文字数制限**: 150文字〜200文字程度。200文字を絶対に超えないこと。
+3. **トーン**: ${targetAudience}が共感する、自然で温かみのある言葉遣い。
+4. **脱・定型句**: 「最高でした」「おすすめです」といった使い古された表現は避け、「〜という発見があった」「〜に癒やされた」など、心の動きを表現してください。
+5. **出力**: 余計な解説や挨拶は一切省き、クチコミの本文のみを出力してください。
+`;
 
   try {
-    const modelId = 'gemini-2.5-flash';
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1/models/${modelId}:generateContent?key=${encodeURIComponent(apiKey)}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [
-            {
-              parts: [{ text: prompt }],
-            },
-          ],
-        }),
-      }
-    );
-
-    if (!response.ok) {
-      const errorText = await response.text().catch(() => '');
-      console.error('Gemini API error:', response.status, response.statusText, errorText);
-      return new Response(
-        JSON.stringify({
-          error: 'Gemini API からエラー応答が返されました。',
-          detail: errorText,
-        }),
-        { status: 500, headers: { 'Content-Type': 'application/json' } }
-      );
-    }
-
-    const data = await response.json();
-    const generatedText =
-      data.candidates?.[0]?.content?.parts
-        ?.map((p) => p.text || '')
-        .join('')
-        .trim() || '';
-
-    if (!generatedText) {
-      return new Response(
-        JSON.stringify({
-          error: 'Gemini のレスポンスからテキストを取得できませんでした。',
-        }),
-        { status: 500, headers: { 'Content-Type': 'application/json' } }
-      );
-    }
-
-    return new Response(
-      JSON.stringify({ text: generatedText }),
-      { status: 200, headers: { 'Content-Type': 'application/json' } }
-    );
-  } catch (err) {
-    console.error('Gemini API call failed:', err);
-    return new Response(
-      JSON.stringify({ error: 'Gemini API 呼び出し中にエラーが発生しました。' }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
-    );
-  }
-}
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: 'gpt-3.5-turbo', // または 'gpt-4'
+        messages: [
+          { role: 'system', content: '
