@@ -46,6 +46,8 @@
             ご期待に沿えず申し訳ございません。改善に努めます。
         </div>
 
+        <p id="api-error" class="hidden text-sm text-red-600 text-center"></p>
+
         <div id="result-area" class="hidden space-y-4 pt-4 border-t border-slate-100">
             <div class="p-4 bg-slate-50 rounded-xl border-2 border-dashed border-slate-200">
                 <p id="generated-text" class="text-sm leading-relaxed text-slate-600"></p>
@@ -124,32 +126,58 @@
 
         document.getElementById('generate-btn').onclick = async () => {
             const btn = document.getElementById('generate-btn');
+            const errEl = document.getElementById('api-error');
+            errEl.classList.add('hidden');
+            errEl.textContent = '';
+
             btn.textContent = "生成中...";
             btn.disabled = true;
 
             const selected = id => Array.from(document.querySelectorAll(`#${id} .bg-cafeWood`)).map(b => b.textContent).join('、');
-            
-            const res = await fetch('/api/generate-review', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    star: currentRating,
-                    tags: selected('tag-container').split('、'),
-                    scene: selected('scene-container'),
-                    mood: selected('mood-container'),
-                    freeText: document.getElementById('free-text').value,
-                    shopName: shopData.shopName,
-                    features: shopData.features,
-                    atmosphere: shopData.atmosphere,
-                    targetAudience: shopData.targetAudience
-                })
-            });
+            const tagStr = selected('tag-container');
+            const tags = tagStr ? tagStr.split('、').filter(Boolean) : [];
 
-            const result = await res.json();
-            document.getElementById('generated-text').textContent = result.text;
-            document.getElementById('result-area').classList.remove('hidden');
-            btn.textContent = "クチコミを生成する";
-            btn.disabled = false;
+            try {
+                const res = await fetch('/api/generate-review', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        star: currentRating,
+                        tags,
+                        scene: selected('scene-container'),
+                        mood: selected('mood-container'),
+                        freeText: document.getElementById('free-text').value,
+                        shopName: shopData.shopName,
+                        features: shopData.features,
+                        atmosphere: shopData.atmosphere,
+                        targetAudience: shopData.targetAudience
+                    })
+                });
+
+                let result;
+                try {
+                    result = await res.json();
+                } catch {
+                    throw new Error('サーバーからの応答が JSON ではありません（API が動いていない可能性）');
+                }
+
+                if (!res.ok) {
+                    throw new Error(result.message || `HTTP ${res.status}`);
+                }
+
+                document.getElementById('generated-text').textContent = result.text;
+                document.getElementById('result-area').classList.remove('hidden');
+            } catch (e) {
+                const msg = e instanceof Error ? e.message : String(e);
+                const netFail = /failed to fetch|load failed|networkerror/i.test(msg);
+                errEl.textContent = netFail
+                    ? msg + ' — ブラウザで file:// ではなく、`npx vercel dev` で開くか、Vercel にデプロイした URL で開いてください。'
+                    : msg;
+                errEl.classList.remove('hidden');
+            } finally {
+                btn.textContent = "クチコミを生成する";
+                btn.disabled = false;
+            }
         };
 
         document.getElementById('copy-btn').onclick = () => {
