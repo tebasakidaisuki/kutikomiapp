@@ -81,11 +81,27 @@
         function setupChips(str, containerId) {
             const container = document.getElementById(containerId);
             if(!str) return;
+            
             str.split(/[,/]/).forEach(item => {
                 const btn = document.createElement('button');
                 btn.textContent = item.trim();
-                btn.className = "px-4 py-2 rounded-xl border border-slate-200 text-sm transition bg-white text-slate-600 active:bg-cafeWood";
-                btn.onclick = () => btn.classList.toggle('bg-cafeWood'), btn.classList.toggle('text-white'), btn.classList.toggle('border-cafeWood');
+                // 初期状態：薄いグレー背景 + 濃いグレー文字
+                btn.className = "px-4 py-2 rounded-xl border border-transparent text-sm transition bg-slate-100 text-slate-700 font-medium active:scale-95";
+                
+                btn.onclick = () => {
+                    // 選択状態の切り替え
+                    const isSelected = btn.classList.contains('bg-cafeWood');
+                    
+                    if (isSelected) {
+                        // 非選択に戻す
+                        btn.classList.remove('bg-cafeWood', 'text-white');
+                        btn.classList.add('bg-slate-100', 'text-slate-700');
+                    } else {
+                        // 選択状態にする
+                        btn.classList.remove('bg-slate-100', 'text-slate-700');
+                        btn.classList.add('bg-cafeWood', 'text-white');
+                    }
+                };
                 container.appendChild(btn);
             });
         }
